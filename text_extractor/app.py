@@ -16,6 +16,7 @@ TEXT_DATASET = "HuggingFaceFW/finepdfs"
 
 OUTPUT_COLUMNS = [
     "order_name",
+    "selected_preferences",
     "id",
     "language",
     "one_sentence_description",
@@ -100,6 +101,35 @@ def propella_matches(row: dict[str, Any], order: dict[str, Any]) -> bool:
     return True
 
 
+def format_selected_preferences(order: dict[str, Any]) -> str:
+    preferences = []
+
+    for field, values in order["filters"].items():
+        selected_values = [value for value in values if value != "Any"]
+        if selected_values:
+            preferences.append(f"{field}={','.join(selected_values)}")
+
+    if order.get("require_low_language_confidence"):
+        preferences.append("require_low_language_confidence=True")
+    if order.get("require_language_mismatch"):
+        preferences.append("require_language_mismatch=True")
+
+    return "; ".join(preferences) if preferences else "Any"
+
+
+def preferences_for_row(row: pd.Series) -> str:
+    saved_preferences = row.get("selected_preferences")
+    if pd.notna(saved_preferences) and str(saved_preferences).strip():
+        return str(saved_preferences)
+
+    order_name = row.get("order_name")
+    for order in st.session_state.get("orders", []):
+        if order.get("name") == order_name:
+            return format_selected_preferences(order)
+
+    return "Not available for this saved CSV row"
+
+
 def normalize_score(value: Any) -> float | None:
     try:
         score = float(value)
@@ -175,6 +205,7 @@ def extract_texts(
 
                     row = {
                         "order_name": order["name"],
+                        "selected_preferences": format_selected_preferences(order),
                         **candidate,
                         "language": text_row.get("language"),
                         "raw_text_excerpt": str(text_row.get("text", ""))[:order["text_chars"]],
@@ -232,6 +263,7 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
     default_columns = [
         column for column in [
             "order_name",
+            "selected_preferences",
             "id",
             "language",
             "one_sentence_description",
@@ -289,6 +321,7 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
         selected_row = preview_df.iloc[selected_index]
         selected_id = str(selected_row.get("id", ""))
         st.markdown(f"**Selected ID:** `{selected_id}`")
+        st.markdown(f"**Selected preferences:** `{preferences_for_row(selected_row)}`")
         st.text_area(
             "Raw text excerpt",
             str(selected_row.get("raw_text_excerpt", "")),
