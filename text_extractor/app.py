@@ -261,15 +261,17 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
     st.dataframe(df[selected_columns], use_container_width=True, hide_index=True)
 
     if "raw_text_excerpt" in df.columns:
-        row_number = st.number_input(
-            "View raw text excerpt row",
-            min_value=0,
-            max_value=max(0, len(df) - 1),
-            value=0,
-            step=1,
-            key=f"raw_row_{title}",
+        id_options = [
+            f"{index}: {row.get('id', '')}"
+            for index, row in df.reset_index(drop=True).iterrows()
+        ]
+        selected_id = st.selectbox(
+            "Preview raw text by ID",
+            id_options,
+            key=f"raw_id_{title}",
         )
-        selected_row = df.iloc[int(row_number)]
+        selected_index = int(selected_id.split(":", 1)[0])
+        selected_row = df.iloc[selected_index]
         st.markdown(f"**Selected ID:** `{selected_row.get('id', '')}`")
         st.text_area(
             "Raw text excerpt",
@@ -301,18 +303,6 @@ with st.sidebar:
     finepdfs_scan = st.number_input("FinePDFs rows to scan", min_value=100, max_value=1_000_000, value=120_000, step=1_000)
     output_path = Path(st.text_input("Output CSV", "text_extractor/outputs/text_extractor_results.csv"))
     st.caption(f"Resolved output: `{output_path}`")
-
-st.subheader("CSV Viewer")
-viewer_col_a, viewer_col_b = st.columns([1, 4])
-with viewer_col_a:
-    if st.button("Refresh CSV"):
-        st.rerun()
-
-existing_output = read_existing_output(output_path)
-if existing_output is None:
-    st.info("No CSV saved yet at the selected output path.")
-else:
-    render_csv_viewer(existing_output, f"Saved CSV ({len(existing_output)} rows)", output_path)
 
 st.subheader("Create Order")
 with st.form("new_order_form"):
@@ -398,3 +388,16 @@ else:
 if "last_result" in st.session_state:
     result = st.session_state.last_result
     render_csv_viewer(result, f"Last Search Results ({len(result)} rows)", output_path)
+
+st.divider()
+st.subheader("CSV Viewer")
+viewer_col_a, viewer_col_b = st.columns([1, 4])
+with viewer_col_a:
+    if st.button("Refresh CSV"):
+        st.rerun()
+
+existing_output = read_existing_output(output_path)
+if existing_output is None:
+    st.info("No CSV saved yet at the selected output path.")
+else:
+    render_csv_viewer(existing_output, f"Saved CSV ({len(existing_output)} rows)", output_path)
