@@ -117,7 +117,7 @@ def format_selected_preferences(order: dict[str, Any]) -> str:
     return "; ".join(preferences) if preferences else "Any"
 
 
-def preferences_for_row(row: pd.Series) -> str:
+def preferences_for_row(row: pd.Series) -> str | None:
     saved_preferences = row.get("selected_preferences")
     if pd.notna(saved_preferences) and str(saved_preferences).strip():
         return str(saved_preferences)
@@ -127,7 +127,16 @@ def preferences_for_row(row: pd.Series) -> str:
         if order.get("name") == order_name:
             return format_selected_preferences(order)
 
-    return "Not available for this saved CSV row"
+    return None
+
+
+def annotation_values_for_row(row: pd.Series) -> str:
+    values = []
+    for field in FIELD_OPTIONS:
+        value = row.get(field)
+        if pd.notna(value) and str(value).strip():
+            values.append(f"{field}={value}")
+    return "; ".join(values) if values else "No annotation values available"
 
 
 def normalize_score(value: Any) -> float | None:
@@ -321,7 +330,12 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
         selected_row = preview_df.iloc[selected_index]
         selected_id = str(selected_row.get("id", ""))
         st.markdown(f"**Selected ID:** `{selected_id}`")
-        st.markdown(f"**Selected preferences:** `{preferences_for_row(selected_row)}`")
+        selected_preferences = preferences_for_row(selected_row)
+        if selected_preferences is None:
+            st.markdown("**Selected preferences:** `Not stored in this CSV. Re-run the search to save them.`")
+            st.markdown(f"**Selected row annotation values:** `{annotation_values_for_row(selected_row)}`")
+        else:
+            st.markdown(f"**Selected preferences:** `{selected_preferences}`")
         st.text_area(
             "Raw text excerpt",
             str(selected_row.get("raw_text_excerpt", "")),
