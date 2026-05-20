@@ -1,4 +1,5 @@
 import argparse
+import csv
 from itertools import islice
 from pathlib import Path
 
@@ -154,6 +155,183 @@ def label_edge_cases(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(cases, ignore_index=True).drop_duplicates(["edge_case", "id"])
 
 
+def edge_cases_for_row(row: dict) -> list[str]:
+    cases = []
+
+    if (
+        row["content_quality"] in {"excellent", "good"}
+        and row["content_safety"] == "safe"
+        and row["pii_presence"] == "no_pii"
+        and ((not row["language_match"]) or row["low_language_confidence"])
+    ):
+        cases.append("good_quality_low_language_confidence")
+
+    if (
+        row["educational_value"] in {"high", "moderate"}
+        and row["content_quality"] in {"poor", "unacceptable"}
+        and row["content_safety"] == "safe"
+        and row["pii_presence"] == "no_pii"
+    ):
+        cases.append("educational_low_content_quality")
+
+    if (
+        row["information_density"] == "empty"
+        and row["content_length"] in {"moderate", "substantial"}
+    ):
+        cases.append("empty_density_good_length")
+
+    if (
+        row["information_density"] == "dense"
+        and row["educational_value"] in {"none", "minimal"}
+        and row["content_quality"] in {"excellent", "good"}
+        and row["content_safety"] == "safe"
+        and row["pii_presence"] == "no_pii"
+    ):
+        cases.append("dense_not_educational")
+
+    if (
+        row["content_integrity"] == "complete"
+        and row["content_ratio"] in {"complete_content", "mostly_content"}
+        and row["information_density"] in {"thin", "empty"}
+        and row["educational_value"] in {"none", "minimal"}
+        and row["content_safety"] == "safe"
+        and row["pii_presence"] == "no_pii"
+    ):
+        cases.append("complete_but_thin")
+
+    if (
+        row["content_integrity"] in {"fragment", "severely_degraded"}
+        and row["content_quality"] in {"excellent", "good"}
+        and row["information_density"] in {"dense", "adequate"}
+        and row["content_safety"] == "safe"
+        and row["pii_presence"] == "no_pii"
+    ):
+        cases.append("fragment_high_quality")
+
+    return cases
+
+
+OUTPUT_COLUMNS = [
+    "edge_case",
+    "id",
+    "language",
+    "one_sentence_description",
+    "raw_text_excerpt",
+    "content_quality",
+    "information_density",
+    "educational_value",
+    "content_safety",
+    "pii_presence",
+    "content_integrity",
+    "content_ratio",
+    "content_length",
+    "full_doc_lid",
+    "full_doc_lid_score",
+    "language_match",
+    "low_language_confidence",
+    "token_count",
+    "url",
+]
+
+
+def normalize_lid_score(value) -> float | None:
+    score = pd.to_numeric(value, errors="coerce")
+    if pd.isna(score):
+        return None
+    return float(max(0, min(1, score)))
+
+
+def incremental_extract(args) -> None:
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    propella_ds = load_dataset(
+        "openeurollm/propella-annotations",
+        "finepdfs",
+        split=args.language,
+        streaming=True,
+    )
+    finepdfs_ds = load_dataset(
+        "HuggingFaceFW/finepdfs",
+        args.language,
+        split="train",
+        streaming=True,
+    )
+
+    propella_by_id = {}
+    for row in islice(propella_ds, args.propella_scan):
+        propella_by_id[row["id"]] = {
+            "id": row["id"],
+            "one_sentence_description": row["one_sentence_description"],
+            "content_quality": row["content_quality"],
+            "information_density": row["information_density"],
+            "educational_value": row["educational_value"],
+            "content_safety": row["content_safety"],
+            "pii_presence": row["pii_presence"],
+            "content_integrity": row["content_integrity"],
+            "content_ratio": row["content_ratio"],
+            "content_length": row["content_length"],
+        }
+
+    counts = {edge_case: 0 for edge_case in EDGE_CASES}
+    seen = set()
+    scanned = 0
+
+    with output_path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=OUTPUT_COLUMNS)
+        writer.writeheader()
+
+        try:
+            for finepdf_row in islice(finepdfs_ds, args.finepdfs_scan):
+                scanned += 1
+                if scanned % args.progress_every == 0:
+                    print(f"Scanned {scanned} FinePDFs rows. Current counts: {counts}", flush=True)
+
+                propella_row = propella_by_id.get(finepdf_row["id"])
+                if propella_row is None:
+                    continue
+
+                full_doc_lid_score = normalize_lid_score(finepdf_row["full_doc_lid_score"])
+                language_match = finepdf_row["language"] == finepdf_row["full_doc_lid"]
+                low_language_confidence = full_doc_lid_score is None or full_doc_lid_score < 0.70
+
+                combined = {
+                    **propella_row,
+                    "language": finepdf_row["language"],
+                    "raw_text_excerpt": str(finepdf_row["text"])[:args.text_chars],
+                    "full_doc_lid": finepdf_row["full_doc_lid"],
+                    "full_doc_lid_score": full_doc_lid_score,
+                    "language_match": language_match,
+                    "low_language_confidence": low_language_confidence,
+                    "token_count": finepdf_row["token_count"],
+                    "url": finepdf_row["url"],
+                }
+
+                for edge_case in edge_cases_for_row(combined):
+                    key = (edge_case, combined["id"])
+                    if counts[edge_case] >= args.per_case or key in seen:
+                        continue
+
+                    writer.writerow({
+                        "edge_case": edge_case,
+                        **{column: combined.get(column) for column in OUTPUT_COLUMNS if column != "edge_case"},
+                    })
+                    file.flush()
+                    seen.add(key)
+                    counts[edge_case] += 1
+                    print(f"Found {edge_case}: {counts[edge_case]}/{args.per_case}", flush=True)
+
+                if all(count >= args.per_case for count in counts.values()):
+                    print("Found enough examples for all edge cases.", flush=True)
+                    break
+        except KeyboardInterrupt:
+            print("\nInterrupted. Partial results have already been saved.", flush=True)
+
+    print("\nFinal counts:")
+    print(counts)
+    print(f"Saved partial/final output: {output_path}")
+
+
 def balanced_sample(df: pd.DataFrame, per_case: int) -> pd.DataFrame:
     if df.empty:
         return df
@@ -172,11 +350,21 @@ def main() -> None:
     parser.add_argument("--finepdfs-scan", type=int, default=100_000)
     parser.add_argument("--per-case", type=int, default=2)
     parser.add_argument("--text-chars", type=int, default=5_000)
+    parser.add_argument("--progress-every", type=int, default=5_000)
+    parser.add_argument(
+        "--batch",
+        action="store_true",
+        help="Use the older batch merge path instead of incremental writes.",
+    )
     parser.add_argument(
         "--output",
         default="data/processed/edge_case_texts_swe.csv",
     )
     args = parser.parse_args()
+
+    if not args.batch:
+        incremental_extract(args)
+        return
 
     print(f"Scanning Propella {args.language}: {args.propella_scan} rows")
     propella_df = load_propella_candidates(args.language, args.propella_scan)
@@ -195,31 +383,9 @@ def main() -> None:
     sample = balanced_sample(edge_cases, args.per_case)
     sample["raw_text_excerpt"] = sample["raw_text"].str.slice(0, args.text_chars)
 
-    columns = [
-        "edge_case",
-        "id",
-        "language",
-        "one_sentence_description",
-        "raw_text_excerpt",
-        "content_quality",
-        "information_density",
-        "educational_value",
-        "content_safety",
-        "pii_presence",
-        "content_integrity",
-        "content_ratio",
-        "content_length",
-        "full_doc_lid",
-        "full_doc_lid_score",
-        "language_match",
-        "low_language_confidence",
-        "token_count",
-        "url",
-    ]
-
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    sample[columns].to_csv(output_path, index=False)
+    sample[OUTPUT_COLUMNS].to_csv(output_path, index=False)
 
     print("\nFound edge cases:")
     if edge_cases.empty:
