@@ -214,6 +214,80 @@ def read_existing_output(output_path: Path) -> pd.DataFrame | None:
         return pd.DataFrame(columns=OUTPUT_COLUMNS)
 
 
+def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = None) -> None:
+    st.subheader(title)
+
+    if df.empty:
+        st.info("CSV exists, but it has no result rows yet.")
+        return
+
+    if "order_name" in df.columns:
+        st.write("Rows by order:")
+        st.dataframe(
+            df["order_name"].value_counts().rename_axis("order_name").reset_index(name="rows"),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    default_columns = [
+        column for column in [
+            "order_name",
+            "id",
+            "language",
+            "one_sentence_description",
+            "content_quality",
+            "information_density",
+            "educational_value",
+            "content_safety",
+            "pii_presence",
+            "content_integrity",
+            "content_ratio",
+            "content_length",
+            "full_doc_lid",
+            "full_doc_lid_score",
+            "language_match",
+            "low_language_confidence",
+            "token_count",
+            "url",
+        ]
+        if column in df.columns
+    ]
+    selected_columns = st.multiselect(
+        "Columns to display",
+        list(df.columns),
+        default=default_columns,
+        key=f"columns_{title}",
+    )
+    st.dataframe(df[selected_columns], use_container_width=True, hide_index=True)
+
+    if "raw_text_excerpt" in df.columns:
+        row_number = st.number_input(
+            "View raw text excerpt row",
+            min_value=0,
+            max_value=max(0, len(df) - 1),
+            value=0,
+            step=1,
+            key=f"raw_row_{title}",
+        )
+        selected_row = df.iloc[int(row_number)]
+        st.markdown(f"**Selected ID:** `{selected_row.get('id', '')}`")
+        st.text_area(
+            "Raw text excerpt",
+            str(selected_row.get("raw_text_excerpt", "")),
+            height=260,
+            key=f"raw_text_{title}",
+        )
+
+    csv_bytes = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download CSV",
+        csv_bytes,
+        file_name=output_path.name if output_path else "text_extractor_results.csv",
+        mime="text/csv",
+        key=f"download_{title}",
+    )
+
+
 st.set_page_config(page_title="Propella Text Extractor", layout="wide")
 st.title("Propella Text Extractor")
 st.caption("Queue annotation filter orders, then retrieve matching raw FinePDFs text excerpts.")
@@ -228,16 +302,17 @@ with st.sidebar:
     output_path = Path(st.text_input("Output CSV", "text_extractor/outputs/text_extractor_results.csv"))
     st.caption(f"Resolved output: `{output_path}`")
 
+st.subheader("CSV Viewer")
+viewer_col_a, viewer_col_b = st.columns([1, 4])
+with viewer_col_a:
+    if st.button("Refresh CSV"):
+        st.rerun()
+
 existing_output = read_existing_output(output_path)
-if existing_output is not None:
-    with st.expander(f"Existing Output ({len(existing_output)} rows)", expanded=False):
-        st.dataframe(existing_output, use_container_width=True)
-        st.download_button(
-            "Download Existing CSV",
-            existing_output.to_csv(index=False).encode("utf-8"),
-            file_name=output_path.name,
-            mime="text/csv",
-        )
+if existing_output is None:
+    st.info("No CSV saved yet at the selected output path.")
+else:
+    render_csv_viewer(existing_output, f"Saved CSV ({len(existing_output)} rows)", output_path)
 
 st.subheader("Create Order")
 with st.form("new_order_form"):
@@ -322,11 +397,4 @@ else:
 
 if "last_result" in st.session_state:
     result = st.session_state.last_result
-    st.subheader("Results")
-    st.dataframe(result, use_container_width=True)
-    st.download_button(
-        "Download CSV",
-        result.to_csv(index=False).encode("utf-8"),
-        file_name="text_extractor_results.csv",
-        mime="text/csv",
-    )
+    render_csv_viewer(result, f"Last Search Results ({len(result)} rows)", output_path)
