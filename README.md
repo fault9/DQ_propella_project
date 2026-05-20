@@ -8,5 +8,6 @@ Data quality experiments using Propella annotations and linked FinePDFs metadata
 - Small human-test samples for comparing raw text excerpts and Propella one-sentence descriptions.
 - Duplicate clustering using Propella annotations and one sentence description
 - Scoring Propella annotations
+- Retrieving raw text grouped after Propella Annotations (potentially to be used in human A/B test)
 
 ## Notes
