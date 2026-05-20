@@ -292,7 +292,7 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
         st.text_area(
             "Raw text excerpt",
             str(selected_row.get("raw_text_excerpt", "")),
-            height=260,
+            height=600,
             key=f"raw_text_{title}_{selected_index}_{selected_id}",
         )
 
