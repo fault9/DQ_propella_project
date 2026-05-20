@@ -8,3 +8,7 @@ data/raw/
 data/processed/*.csv
 data/processed/*.parquet
 !data/processed/README.md
+text_extractor/outputs/*.csv
+text_extractor/outputs/*.parquet
+**/data/processed/*.csv
+**/data/processed/*.parquet
