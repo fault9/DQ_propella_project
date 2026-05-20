@@ -369,6 +369,13 @@ with st.sidebar:
     output_path = Path(st.text_input("Output CSV", "text_extractor/outputs/text_extractor_results.csv"))
     st.caption(f"Resolved output: `{output_path}`")
 
+if st.button("Clear Orders And Results"):
+    st.session_state.orders = []
+    st.session_state.pop("last_result", None)
+    if output_path.exists():
+        output_path.unlink()
+    st.rerun()
+
 st.subheader("Create Order")
 with st.form("new_order_form"):
     col_a, col_b, col_c, col_d = st.columns(4)
