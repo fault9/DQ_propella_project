@@ -10,5 +10,3 @@ Data quality experiments using Propella annotations and linked FinePDFs metadata
 - Scoring Propella annotations
 
 ## Notes
-
-Large/generated artifacts ignored by git. Keep raw data, model binaries, and processed CSV/Parquet outputs out of the repository unless explicitly needed.
