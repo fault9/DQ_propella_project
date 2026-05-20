@@ -287,12 +287,13 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
             key=f"raw_id_{title}",
         )
         selected_row = preview_df.iloc[selected_index]
-        st.markdown(f"**Selected ID:** `{selected_row.get('id', '')}`")
+        selected_id = str(selected_row.get("id", ""))
+        st.markdown(f"**Selected ID:** `{selected_id}`")
         st.text_area(
             "Raw text excerpt",
             str(selected_row.get("raw_text_excerpt", "")),
             height=260,
-            key=f"raw_text_{title}",
+            key=f"raw_text_{title}_{selected_index}_{selected_id}",
         )
 
     csv_bytes = df.to_csv(index=False).encode("utf-8")
