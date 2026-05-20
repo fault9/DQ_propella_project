@@ -122,9 +122,9 @@ def preferences_for_row(row: pd.Series) -> str | None:
     if pd.notna(saved_preferences) and str(saved_preferences).strip():
         return str(saved_preferences)
 
-    order_name = row.get("order_name")
+    order_name = str(row.get("order_name", "")).strip()
     for order in st.session_state.get("orders", []):
-        if order.get("name") == order_name:
+        if str(order.get("name", "")).strip() == order_name:
             return format_selected_preferences(order)
 
     return None
@@ -329,10 +329,12 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
         )
         selected_row = preview_df.iloc[selected_index]
         selected_id = str(selected_row.get("id", ""))
+        selected_order_name = str(selected_row.get("order_name", ""))
         st.markdown(f"**Selected ID:** `{selected_id}`")
+        st.markdown(f"**Selected order:** `{selected_order_name}`")
         selected_preferences = preferences_for_row(selected_row)
         if selected_preferences is None:
-            st.markdown("**Selected preferences:** `Not stored in this CSV. Re-run the search to save them.`")
+            st.markdown("**Selected preferences:** `Not stored in this CSV and no queued order with this name is available.`")
             st.markdown(f"**Selected row annotation values:** `{annotation_values_for_row(selected_row)}`")
         else:
             st.markdown(f"**Selected preferences:** `{selected_preferences}`")
