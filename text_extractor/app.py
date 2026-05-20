@@ -278,17 +278,15 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
             )
             return
 
-        id_options = [
-            f"{index}: {row.get('id', '')}"
-            for index, row in df.reset_index(drop=True).iterrows()
-        ]
-        selected_id = st.selectbox(
+        preview_df = df.reset_index(drop=True)
+        index_options = list(range(len(preview_df)))
+        selected_index = st.selectbox(
             "Preview raw text by ID",
-            id_options,
+            index_options,
+            format_func=lambda index: f"{index}: {preview_df.iloc[index].get('id', '')}",
             key=f"raw_id_{title}",
         )
-        selected_index = int(selected_id.split(":", 1)[0])
-        selected_row = df.iloc[selected_index]
+        selected_row = preview_df.iloc[selected_index]
         st.markdown(f"**Selected ID:** `{selected_row.get('id', '')}`")
         st.text_area(
             "Raw text excerpt",
