@@ -261,6 +261,23 @@ def render_csv_viewer(df: pd.DataFrame, title: str, output_path: Path | None = N
     st.dataframe(df[selected_columns], use_container_width=True, hide_index=True)
 
     if "raw_text_excerpt" in df.columns:
+        show_raw_text = st.toggle(
+            "Show raw text preview",
+            value=False,
+            key=f"show_raw_text_{title}",
+        )
+        if not show_raw_text:
+            st.caption("Raw text is hidden. Toggle it on to preview excerpts.")
+            csv_bytes = df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "Download CSV",
+                csv_bytes,
+                file_name=output_path.name if output_path else "text_extractor_results.csv",
+                mime="text/csv",
+                key=f"download_{title}",
+            )
+            return
+
         id_options = [
             f"{index}: {row.get('id', '')}"
             for index, row in df.reset_index(drop=True).iterrows()
