@@ -84,12 +84,17 @@ def test_parse_clamps():
     assert parse_scores('{"educational_value": 2, "content_quality": 0.5}') == (1.0, 0.5)
 
 
-# 4b. Combination: geometric mean (default), with mean/min alternatives.
+# 4b. Combination: educational-value-weighted mean (default), with geometric/mean/min alternatives.
 def test_combine_scores():
-    assert combine_scores(0.9, 0.9) == 0.9
-    assert abs(combine_scores(0.9, 0.2) - (0.9 * 0.2) ** 0.5) < 1e-9   # ~0.424, penalizes imbalance
-    assert combine_scores(0.5, None) is None                          # need both axes
+    # Default is 'weighted' = 0.6*edu + 0.4*qual (config.EDU_WEIGHT / QUAL_WEIGHT).
+    assert abs(combine_scores(0.9, 0.9) - 0.9) < 1e-9
+    assert abs(combine_scores(0.9, 0.2) - (0.6 * 0.9 + 0.4 * 0.2)) < 1e-9    # 0.62, edu dominates
+    assert abs(combine_scores(0.2, 0.9) - (0.6 * 0.2 + 0.4 * 0.9)) < 1e-9    # 0.48 < 0.62: edu weighted higher
+    assert combine_scores(0.0, 0.6) > 0                                      # readable non-educational != garbage (no zero-collapse)
+    assert combine_scores(0.5, None) is None                                # need both axes
     assert combine_scores(None, 0.5) is None
+    # Alternatives remain available explicitly:
+    assert abs(combine_scores(0.9, 0.2, mode="geometric") - (0.9 * 0.2) ** 0.5) < 1e-9
     assert combine_scores(0.9, 0.2, mode="mean") == 0.55
     assert combine_scores(0.9, 0.2, mode="min") == 0.2
 
@@ -145,3 +150,30 @@ def test_fetch_resume_keeps_partial_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(text_fetcher, "load_dataset", boom)
     out = fetch_texts(["A", "B"], lang, output_dir=str(tmp_path), stream=False)
     assert out == {"A": "alpha"}            # B missing, no streaming attempted
+
+
+# 7. Output projection: two files, exact column contracts, null rows preserved
+def test_write_outputs_projection(tmp_path):
+    from run_pipeline import _write_outputs
+    gold = pd.DataFrame([
+        {"doc_id": "A", "educational_value": 0.8, "content_quality": 0.6,
+         "quality_score": 0.69, "raw_response": "{...}"},
+        {"doc_id": "B", "educational_value": None, "content_quality": None,
+         "quality_score": None, "raw_response": "ERROR"},      # failed doc -> null row
+    ])
+    gp, gc = tmp_path / "gold.parquet", tmp_path / "gold.csv"
+    ap, ac = tmp_path / "axes.parquet", tmp_path / "axes.csv"
+    _write_outputs(gold, gp, gc, ap, ac)
+
+    # Deliverable: EXACTLY (id, quality_score) — doc_id renamed to id; null row kept.
+    for f in (gp, gc):
+        d = pd.read_parquet(gp) if f.suffix == ".parquet" else pd.read_csv(gc)
+        assert list(d.columns) == ["id", "quality_score"]
+        assert len(d) == 2 and d["quality_score"].isna().sum() == 1
+
+    # Axes: all four columns under doc_id; null row kept.
+    cols = ["doc_id", "educational_value", "content_quality", "quality_score"]
+    for f in (ap, ac):
+        a = pd.read_parquet(ap) if f.suffix == ".parquet" else pd.read_csv(ac)
+        assert list(a.columns) == cols
+        assert len(a) == 2 and a["educational_value"].isna().sum() == 1

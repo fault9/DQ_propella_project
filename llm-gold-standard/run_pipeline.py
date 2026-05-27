@@ -6,10 +6,11 @@ LLM gold-standard quality scoring — main entry point.
     python run_pipeline.py --provider berget --model <berget-model> \\
         --api_key_env BERGET_API_KEY                                      # Berget (OpenAI-compatible)
 
-Deliverable: outputs/gold_standard_{lang}.parquet/.csv = (doc_id, quality_score) only.
-quality_score in [0,1] is the geometric mean of two LLM axes (educational_value,
-content_quality; see src.config.COMBINE_MODE). The raw axes are kept alongside in
-outputs/gold_standard_{lang}_axes.parquet for diagnostics/validation, not in the deliverable.
+Deliverable: outputs/gold_standard_{lang}.parquet/.csv = (id, quality_score) only.
+quality_score in [0,1] is an educational-value-weighted mean of two LLM axes
+(0.6*educational_value + 0.4*content_quality; see src.config.COMBINE_MODE). The per-axis scores are kept alongside in
+outputs/gold_standard_{lang}_axes.parquet/.csv (doc_id, educational_value, content_quality,
+quality_score) for analysis/baselines, not in the deliverable.
 """
 from __future__ import annotations
 
@@ -90,6 +91,26 @@ def _summary(gold: pd.DataFrame, gold_path: Path) -> None:
     print("=" * 70)
 
 
+def _write_outputs(gold: pd.DataFrame, gold_path: Path, gold_csv: Path,
+                   axes_path: Path, axes_csv: Path) -> None:
+    """Project the scored frame into the two output files and write parquet + csv for each.
+
+    Pure projection — no scoring. Failed docs (quality_score / axes are null) are PRESERVED
+    as rows in both files, never dropped.
+
+    - Deliverable (collaborator contract): EXACTLY (id, quality_score); doc_id -> id here only.
+    - Axes (analysis/baselines): (doc_id, educational_value, content_quality, quality_score),
+      so educational_value can serve as a single-axis baseline vs. the combined score.
+    """
+    axes = gold[["doc_id", "educational_value", "content_quality", "quality_score"]]
+    axes.to_parquet(axes_path, index=False)
+    axes.to_csv(axes_csv, index=False)
+
+    deliverable = gold[["doc_id", "quality_score"]].rename(columns={"doc_id": "id"})
+    deliverable.to_parquet(gold_path, index=False)
+    deliverable.to_csv(gold_csv, index=False)
+
+
 def main() -> None:
     args = build_parser().parse_args()
     set_seed(args.seed)
@@ -110,7 +131,8 @@ def main() -> None:
     lang = resolve_language(args.language)
     gold_path = base / f"gold_standard_{lang}.parquet"
     gold_csv = base / f"gold_standard_{lang}.csv"
-    axes_path = base / f"gold_standard_{lang}_axes.parquet"   # diagnostics: per-axis scores
+    axes_path = base / f"gold_standard_{lang}_axes.parquet"   # analysis: per-axis scores
+    axes_csv = base / f"gold_standard_{lang}_axes.csv"
 
     config = {
         "sample_size": args.sample_size, "seed": args.seed, "language": lang,
@@ -187,13 +209,11 @@ def main() -> None:
                            output_dir=args.output_dir, language=lang,
                            batch_size=args.batch_size, failure_log=failure_log, max_chars=max_chars)
 
-    # Step 6: save deliverables.
-    # Deliverable = (doc_id, quality_score) ONLY. The raw axes go to a side file for
-    # diagnostics/validation against Propella, but are kept out of the deliverable.
-    gold.drop(columns=["raw_response"], errors="ignore").to_parquet(axes_path, index=False)
-    deliverable = gold[["doc_id", "quality_score"]]
-    deliverable.to_parquet(gold_path, index=False)
-    deliverable.to_csv(gold_csv, index=False)
+    # Step 6: save outputs. Two files, each .parquet + .csv:
+    #   deliverable -> (id, quality_score) ONLY               (collaborator contract)
+    #   axes        -> (doc_id, educational_value, content_quality, quality_score)  (analysis)
+    # Null rows (failed docs) are preserved in both. See _write_outputs.
+    _write_outputs(gold, gold_path, gold_csv, axes_path, axes_csv)
     _summary(gold, gold_path)
 
 

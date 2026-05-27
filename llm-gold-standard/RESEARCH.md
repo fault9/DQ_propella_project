@@ -150,23 +150,46 @@ band for each quartile (e.g. `0.0–0.2 nothing to learn … 0.9–1.0 richly ed
 
 ---
 
-## E. Combine the axes with the **geometric mean**
+## E. Combine the axes with an **educational-value-weighted mean**
 
-**Decision.** `quality_score = sqrt(educational_value × content_quality)` (configurable;
-`mean` and `min` are available alternatives).
+**Decision.** `quality_score = EDU_WEIGHT·educational_value + QUAL_WEIGHT·content_quality` with
+`EDU_WEIGHT=0.6`, `QUAL_WEIGHT=0.4` (configurable; `geometric`, `mean`, and `min` remain
+available alternatives). Educational value is the **primary driver**; writing quality
+contributes but does not dominate.
 
-**Rationale.** This is a **design choice** motivated by the failure mode and a measurement
-principle, then validated empirically — not taken from a single paper:
-- The gold standard must avoid **false positives at the top** (a polished record, or
-  educational-looking garbled text, reaching 0.9). The geometric mean is "AND-like": a document
-  scores high only if **both** axes are strong (`√(0.9·0.2)=0.42`), exactly analogous to why
-  F-score uses a (harmonic) mean of precision and recall — you want both jointly satisfied, not
-  traded off. An arithmetic mean treats the axes as substitutable and under-penalizes lopsided
-  docs (`0.55` for the same case).
-- Because **both raw axes are stored**, the combination is recomputable in code without
-  re-running the LLM, so the choice is reversible and can be re-tuned against the A/B set.
+**Rationale.** Three requirements pin the combine, and a weighted mean is the option that meets
+all three:
+1. **Educational value must lead.** It is the high-value curation signal (FineWeb-Edu/DCLM, §G),
+   so a plain 0.5/0.5 mean *undersells* it by treating writing quality as equally important.
+   Weighting 0.6/0.4 keeps edu the primary driver — defensible straight from the literature —
+   while still letting writing quality move the score.
+2. **No degenerate point mass, so ranking survives at the bottom.** A multiplicative
+   ("geometric") combine collapses every `educational_value≈0` document to ≈0 regardless of how
+   readable it is — and that corner is *populated* (well-written but non-educational records:
+   landing pages, minutes, obituaries). In an n≈52 pilot ~1/4 of docs piled at exactly 0 under
+   geometric, conflating "readable but not educational" with "garbage." A weighted mean spreads
+   them by writing quality, so **readable text outranks garbage** — the ranking signal we want.
+3. **No corruption gate needed.** Corruption shows up as low on *both* axes empirically (in the
+   same pilot, every `content_quality≤0.2` doc also had `educational_value≤0.3`), so a weighted
+   mean already lands corrupted docs low (~0.1–0.25) without a special-case gate.
 
-**Code.** `src/llm_scorer.py: combine_scores()`; `src/config.py: COMBINE_MODE`.
+**Why not geometric (the prior choice), honestly.** Geometric's selling point is the "AND-like"
+property — analogous to F-score over precision/recall — that guards against *educational-looking
+garbled text* reaching the top. But the n≈52 joint-distribution check found the dangerous corner,
+`content_quality≤0.2 & educational_value≥0.6`, **empty** (the axes are positively correlated at
+the top; you cannot teach with garbled text). So the AND-property is protecting against a case
+that does not occur here, while its cost — the point mass in (2) — is real. With geometric's
+advantage neutralized and its disadvantage live, the decision flips to the weighted mean. The
+trade-off we accept: a weighted mean is *not* AND-like, so a doc can score moderately on one axis
+alone — which, for the populated corner (readable, non-educational), is exactly the behavior we
+want, not a defect.
+
+**Still empirical, not settled by argument.** The above is the theoretical prior; the **human A/B
+pairs remain the arbiter** (§B). Both raw axes are stored, so the combine — weights included — is
+recomputable and re-tunable in one line without re-running the LLM. (The pilot evidence is
+directional: n≈52, one judge, partial run.)
+
+**Code.** `src/llm_scorer.py: combine_scores()`; `src/config.py: COMBINE_MODE, EDU_WEIGHT, QUAL_WEIGHT`.
 
 ---
 
@@ -277,6 +300,10 @@ ordinals. Treat as directional, not a formal evaluation.
   |---|---|---|---|
   | Llama-3.3-70B | +0.73 | +0.61 | +0.61 |
   | Claude Sonnet | +0.67 | **+0.86** | **+0.74** |
+
+  *The `combined` column (and the cross-family figure below) was computed under the then-default
+  geometric combine; recompute under the 0.6/0.4 weighted default (§E) before citing — the
+  per-axis columns are unaffected.*
 - **Cross-family agreement** (combined, Spearman): **+0.80** — the records→low / educational→high
   behaviour is robust across two model families, i.e. an architecture effect, not a single
   model's quirk.

@@ -19,7 +19,7 @@ and L2 (LightGBM reranker) models that predict quality from Propella features.
 
 1. **Sample** (`src/sampler.py`) — stream a ~50k Propella pool (`finepdfs` subset), bucket by `(educational_value, content_quality)` ordinals (≤25 strata), and **stratified-sample** so every non-empty stratum is represented.
 2. **Fetch text** (`src/text_fetcher.py`) — stream `HuggingFaceFW/finepdfs`, match the sampled `id`s, truncate to 50k chars, **cache** to parquet.
-3. **Score** (`src/llm_scorer.py`) — call an LLM per doc with the editable prompt, parse **two independent 0–1 axes** (`educational_value`, `content_quality`), **combine** them into `quality_score` (geometric mean; `COMBINE_MODE` in `src/config.py`), **retry+backoff**, **checkpoint every 50**, **resume from partial**.
+3. **Score** (`src/llm_scorer.py`) — call an LLM per doc with the editable prompt, parse **two independent 0–1 axes** (`educational_value`, `content_quality`), **combine** them into `quality_score` (educational-value-weighted mean, `0.6·edu + 0.4·qual`; `COMBINE_MODE` / `EDU_WEIGHT` in `src/config.py`), **retry+backoff**, **checkpoint every 50**, **resume from partial**.
 
 ## Install & run
 
@@ -82,9 +82,9 @@ Any OpenAI-compatible endpoint also works via `--base_url ... --api_key_env MY_K
 
 | File | Description |
 |---|---|
-| `outputs/gold_standard_{lang}.parquet` | **the deliverable**: `doc_id, quality_score` only |
+| `outputs/gold_standard_{lang}.parquet` | **the deliverable**: `id, quality_score` only |
 | `outputs/gold_standard_{lang}.csv` | same two columns, for inspection |
-| `outputs/gold_standard_{lang}_axes.parquet` | per-axis diagnostics: `doc_id, educational_value, content_quality, quality_score` (kept out of the deliverable) |
+| `outputs/gold_standard_{lang}_axes.parquet` + `.csv` | analysis file: `doc_id, educational_value, content_quality, quality_score` (per-axis scores + combined; kept out of the deliverable) |
 | `outputs/gold_standard_{lang}_partial.parquet` | checkpoint for crash/resume (includes `raw_response`) |
 | `outputs/raw_texts_{lang}.parquet` | cached raw texts (re-runs skip fetching) |
 | `outputs/sample_{lang}.parquet` | sample manifest: `doc_id` + strata + reweighting weight |

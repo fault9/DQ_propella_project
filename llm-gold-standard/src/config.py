@@ -84,10 +84,17 @@ MAX_RETRIES = 3                     # API retries before giving up on a doc
 BACKOFF_BASE = 2.0                  # exponential backoff base (seconds)
 
 # How the two LLM axes (educational_value, content_quality) combine into the final
-# quality_score. 'geometric' = sqrt(edu*quality): a doc scores high only if BOTH
-# axes are strong (penalizes lopsided docs). Alternatives: 'mean', 'min'. Both raw
-# axes are stored, so this is recomputable in code without re-running the LLM.
-COMBINE_MODE = "geometric"
+# quality_score. Default 'weighted' = EDU_WEIGHT*edu + QUAL_WEIGHT*qual: an
+# educational-value-weighted arithmetic mean. Educational value is the primary curation
+# signal (FineWeb-Edu/DCLM), so it drives the score while writing quality still contributes.
+# Avoids the degenerate point mass at 0 that a multiplicative combine produces on the
+# populated edu~=0 axis (so readable-but-non-educational text still ranks above garbage), and
+# needs no corruption gate (corruption shows up as low on BOTH axes). Alternatives: 'geometric'
+# (sqrt(edu*quality), AND-like), 'mean' (plain 0.5/0.5), 'min'. Both raw axes are stored, so the
+# combine — weights included — is recomputable/re-tunable in code without re-running the LLM.
+EDU_WEIGHT = 0.6      # weight on educational_value in the 'weighted' combine (primary signal)
+QUAL_WEIGHT = 0.4     # weight on content_quality; EDU_WEIGHT + QUAL_WEIGHT = 1.0 keeps score in [0,1]
+COMBINE_MODE = "weighted"
 
 # Per-provider defaults. "berget" is OpenAI-compatible with a preset base_url.
 PROVIDER_PRESETS = {

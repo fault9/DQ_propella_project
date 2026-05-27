@@ -23,7 +23,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.config import MAX_RETRIES, BACKOFF_BASE, CHECKPOINT_EVERY, COMBINE_MODE, get_pricing
+from src.config import (MAX_RETRIES, BACKOFF_BASE, CHECKPOINT_EVERY, COMBINE_MODE,
+                        EDU_WEIGHT, QUAL_WEIGHT, get_pricing)
 from src.utils import log
 
 AXIS_KEYS = ("educational_value", "content_quality")
@@ -115,20 +116,23 @@ def parse_scores(raw: str | None):
 def combine_scores(edu, quality, mode: str = COMBINE_MODE):
     """Combine the two axes into the final quality_score; None if either is missing.
 
-    'geometric' (default): sqrt(edu*quality) — penalizes a lopsided document so it
-    can only score high when BOTH axes are strong. 'mean' and 'min' are kept as
-    one-arg alternatives; the combination is recomputable in code without re-running
-    the LLM, since both raw axes are stored.
+    'weighted' (default): EDU_WEIGHT*edu + QUAL_WEIGHT*qual — an educational-value-weighted
+    arithmetic mean (edu is the primary curation signal, so it drives the score while writing
+    quality still contributes); no zero-collapse, no corruption gate needed. Alternatives:
+    'geometric' (sqrt(edu*quality), AND-like), 'mean' (plain 0.5/0.5), 'min'. The combine is
+    recomputable in code without re-running the LLM, since both raw axes are stored.
     """
     if edu is None or quality is None:
         return None
+    if mode == "weighted":
+        return EDU_WEIGHT * edu + QUAL_WEIGHT * quality
     if mode == "geometric":
         return math.sqrt(edu * quality)
     if mode == "mean":
         return (edu + quality) / 2.0
     if mode == "min":
         return min(edu, quality)
-    raise ValueError(f"Unknown combine mode '{mode}' (use geometric|mean|min).")
+    raise ValueError(f"Unknown combine mode '{mode}' (use weighted|geometric|mean|min).")
 
 
 # --- API calls -------------------------------------------------------------
