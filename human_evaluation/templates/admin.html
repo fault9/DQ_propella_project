@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Swedish PDF Quality Study</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="admin-page">
+    <h1>Admin Dashboard</h1>
+    <p>Total pairs in database: <strong>{{ total_pairs }}</strong></p>
+
+    <h2>Per-Rater Statistics</h2>
+    {% if rater_stats %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Rater</th>
+          <th>First Seen</th>
+          <th>Queue Built</th>
+          <th>Total Resp.</th>
+          <th>Skipped</th>
+          <th>Real</th>
+          <th>Duplicate</th>
+          <th>Cal. Read.</th>
+          <th>Cal. Sub.</th>
+          <th>Mean Time (ms)</th>
+          <th>Cal. Read. Acc.</th>
+          <th>Cal. Sub. Acc.</th>
+          <th>Divergence %</th>
+          <th>Readability Dist.</th>
+          <th>Substance Dist.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rs in rater_stats %}
+        <tr>
+          <td>{{ rs.name }}</td>
+          <td>{{ rs.first_seen_at or '' }}</td>
+          <td>{{ 'Yes' if rs.queue_built else 'No' }}</td>
+          <td>{{ rs.total_responses }}</td>
+          <td>{{ rs.skipped }}</td>
+          <td>{{ rs.real_count }}</td>
+          <td>{{ rs.dup_count }}</td>
+          <td>{{ rs.cal_read_count }}</td>
+          <td>{{ rs.cal_sub_count }}</td>
+          <td>{{ rs.mean_time_ms }}</td>
+          <td>{{ rs.cal_read_acc }}</td>
+          <td>{{ rs.cal_sub_acc }}</td>
+          <td>{{ rs.diverge_pct }}</td>
+          <td>
+            {% for k, v in rs.read_choices.items() %}
+              {{ k }}: {{ v }}&nbsp;
+            {% endfor %}
+          </td>
+          <td>
+            {% for k, v in rs.sub_choices.items() %}
+              {{ k }}: {{ v }}&nbsp;
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No raters have completed any responses yet.</p>
+    {% endif %}
+
+    <h2>Cross-Rater Duplicate Agreement</h2>
+    <table class="admin-table stats-table">
+      <tr>
+        <th>Metric</th>
+        <th>Readability</th>
+        <th>Substance</th>
+      </tr>
+      <tr>
+        <td>Exact agreement %</td>
+        <td>{{ exact_read_pct }}</td>
+        <td>{{ exact_sub_pct }}</td>
+      </tr>
+      <tr>
+        <td>Binary-collapsed agreement % (a/b)</td>
+        <td>{{ binary_read_pct }}</td>
+        <td>{{ binary_sub_pct }}</td>
+      </tr>
+    </table>
+
+    <h2>Per-Duplicate-Pair Ratings</h2>
+    {% if dup_agreement %}
+    {% for entry in dup_agreement %}
+    <div class="dup-pair-block">
+      <h3>Pair: {{ entry.pair_id[:12] }}…</h3>
+      {% if entry.ratings %}
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Rater</th>
+            <th>Readability</th>
+            <th>Substance</th>
+            <th>Skipped</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in entry.ratings %}
+          <tr>
+            <td>{{ r.rater }}</td>
+            <td>{{ r.readability_choice or '—' }}</td>
+            <td>{{ r.substance_choice or '—' }}</td>
+            <td>{{ 'Yes' if r.skipped else 'No' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p><em>No ratings yet for this pair.</em></p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No duplicate pairs found.</p>
+    {% endif %}
+
+  </div>
+</body>
+</html>

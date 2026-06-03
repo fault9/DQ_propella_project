@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study Complete</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="single-col">
+    <h1>Study Complete</h1>
+    {% if rater_name %}
+    <p>Thank you, <strong>{{ rater_name }}</strong>!</p>
+    {% endif %}
+    <p class="big-message">You have completed all 45 pairs. Thank you for participating!</p>
+    <p>Your responses have been recorded. You may close this window.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Break Time</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="single-col">
+    <h1>Session {{ session_just_completed }} of 3 complete!</h1>
+    <p>Take a 10-minute break before Session {{ session_next }}.</p>
+    <p class="info-note">You have completed {{ completed }} of 45 pairs total.</p>
+
+    <div class="countdown-box">
+      <div id="countdown" class="countdown-timer">10:00</div>
+      <p>Time remaining before your next session</p>
+    </div>
+
+    <a id="continue-link" href="/pair?after_break=1" class="btn-primary btn-disabled" aria-disabled="true">
+      Start Session {{ session_next }}
+    </a>
+  </div>
+
+  <script>
+    var deadline = Date.now() + {{ seconds_remaining }} * 1000;
+    var link = document.getElementById('continue-link');
+    var display = document.getElementById('countdown');
+
+    function unlock() {
+      display.textContent = '00:00';
+      display.classList.add('done');
+      link.classList.remove('btn-disabled');
+      link.removeAttribute('aria-disabled');
+    }
+
+    function tick() {
+      var remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      if (remaining <= 0) {
+        unlock();
+        return;
+      }
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      display.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      setTimeout(tick, 500);
+    }
+
+    link.addEventListener('click', function(e) {
+      if (link.classList.contains('btn-disabled')) e.preventDefault();
+    });
+
+    if ({{ seconds_remaining }} <= 0) {
+      unlock();
+    } else {
+      tick();
+    }
+  </script>
+</body>
+</html>

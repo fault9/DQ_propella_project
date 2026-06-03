@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rating Instructions — Swedish PDF Quality Study</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="single-col">
+    <h1>Rating Instructions</h1>
+    <p>Welcome, <strong>{{ rater_name }}</strong>. Please read these instructions carefully before starting.</p>
+
+    <h2>Your task</h2>
+    <p>For each pair of documents, you will answer <strong>two independent questions</strong>:</p>
+
+    <h3>Question 1 — Readability</h3>
+    <p><em>Which document is more readable and intact?</em></p>
+    <p>Consider: Is the text well-extracted from the PDF? Is it coherent Swedish? Is it free from garbled characters, broken sentences, or extraction artifacts? A readable document flows naturally and is easy to follow.</p>
+
+    <h3>Question 2 — Substance</h3>
+    <p><em>Which document contains more substantive, broadly useful information?</em></p>
+    <p>Consider: Does the content teach something widely applicable, or is it trivial, marketing copy, or procedural filler? Substantive documents impart knowledge that could benefit a general reader.</p>
+
+    <h2>Key principles</h2>
+    <ul>
+      <li><strong>These are independent:</strong> A document can be highly readable but trivial in content, or it can be substantive but poorly extracted. Judge each question separately.</li>
+      <li><strong>You see excerpts:</strong> Documents are shown as the first 3,000 characters of longer PDFs. Judge only what is in front of you.</li>
+      <li><strong>Force a choice:</strong> Use the 4-point scale even when the choice is close. Use "slightly" when you are unsure — do not skip just because it is hard.</li>
+      <li><strong>Skip sparingly:</strong> Use "Skip" ONLY when a document is genuinely unrateable due to extraction failure, wrong language, or mistranslation — NOT simply because the choice is difficult.</li>
+      <li><strong>Timing is recorded:</strong> Do not rush; accuracy matters more than speed.</li>
+    </ul>
+
+    <h2>Study structure</h2>
+    <p>This study has <strong>3 sessions of 15 pairs each</strong>, approximately 30 minutes per session. Please take a 10-minute break between sessions. You can complete sessions on different days if needed.</p>
+
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/rubric">
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" id="ack" name="ack" required>
+          I have read and understood the rubric.
+        </label>
+      </div>
+      <button type="submit" class="btn-primary">Begin rating</button>
+    </form>
+  </div>
+</body>
+</html>

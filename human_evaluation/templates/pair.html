@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pair {{ queue_position }} of 45</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="pair-page">
+    <div class="pair-header">
+      <span class="progress-info">
+        Pair {{ queue_position }} of 45 &mdash;
+        Pair {{ completed_in_session }} of 15 in session {{ session_num }}
+      </span>
+      <span class="rater-name">{{ rater_name }}</span>
+    </div>
+
+    <div class="two-col">
+      <!-- Document A (left) -->
+      <div class="doc-col">
+        <h2>Document A</h2>
+        {% if display_a_desc %}
+        <p class="doc-desc"><em>{{ display_a_desc }}</em></p>
+        {% endif %}
+        <div class="doc-text">
+          {% if display_a_text %}
+            <pre>{{ display_a_text[:3000] }}</pre>
+            {% if display_a_char_count > 3000 %}
+            <p class="truncation-note">Showing first 3,000 characters of a longer document.</p>
+            {% endif %}
+          {% else %}
+            <p class="no-text"><em>(No text available for this document.)</em></p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Document B (right) -->
+      <div class="doc-col">
+        <h2>Document B</h2>
+        {% if display_b_desc %}
+        <p class="doc-desc"><em>{{ display_b_desc }}</em></p>
+        {% endif %}
+        <div class="doc-text">
+          {% if display_b_text %}
+            <pre>{{ display_b_text[:3000] }}</pre>
+            {% if display_b_char_count > 3000 %}
+            <p class="truncation-note">Showing first 3,000 characters of a longer document.</p>
+            {% endif %}
+          {% else %}
+            <p class="no-text"><em>(No text available for this document.)</em></p>
+          {% endif %}
+        </div>
+      </div>
+    </div><!-- end two-col -->
+
+    <!-- Rating form -->
+    <form id="rating-form" method="post" action="/response" onsubmit="appendTime()">
+      <input type="hidden" name="pair_id" value="{{ pair_id }}">
+      <input type="hidden" name="side_assignment" value="{{ side_assignment }}">
+      <input type="hidden" name="time_ms" id="time_ms" value="">
+      <input type="hidden" name="readability_choice" id="readability_choice_hidden" value="">
+      <input type="hidden" name="substance_choice" id="substance_choice_hidden" value="">
+
+      <!-- Question 1: Readability -->
+      <div class="question-block">
+        <h3>Question 1 — Which document is more readable and intact?</h3>
+        <div class="btn-group" id="readability-group">
+          <button type="button" class="rating-btn" data-q="readability" data-val="a_much"
+            onclick="selectChoice('readability', 'a_much', this)">A much more readable</button>
+          <button type="button" class="rating-btn" data-q="readability" data-val="a_slight"
+            onclick="selectChoice('readability', 'a_slight', this)">A slightly more readable</button>
+          <button type="button" class="rating-btn" data-q="readability" data-val="b_slight"
+            onclick="selectChoice('readability', 'b_slight', this)">B slightly more readable</button>
+          <button type="button" class="rating-btn" data-q="readability" data-val="b_much"
+            onclick="selectChoice('readability', 'b_much', this)">B much more readable</button>
+        </div>
+      </div>
+
+      <!-- Question 2: Substance -->
+      <div class="question-block">
+        <h3>Question 2 — Which document contains more substantive, broadly useful information?</h3>
+        <div class="btn-group" id="substance-group">
+          <button type="button" class="rating-btn" data-q="substance" data-val="a_much"
+            onclick="selectChoice('substance', 'a_much', this)">A much more substantive</button>
+          <button type="button" class="rating-btn" data-q="substance" data-val="a_slight"
+            onclick="selectChoice('substance', 'a_slight', this)">A slightly more substantive</button>
+          <button type="button" class="rating-btn" data-q="substance" data-val="b_slight"
+            onclick="selectChoice('substance', 'b_slight', this)">B slightly more substantive</button>
+          <button type="button" class="rating-btn" data-q="substance" data-val="b_much"
+            onclick="selectChoice('substance', 'b_much', this)">B much more substantive</button>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="notes-block">
+        <label for="notes">Notes (optional, 200 char max)</label>
+        <textarea id="notes" name="notes" maxlength="200" rows="2" placeholder="Optional notes about this pair..."></textarea>
+      </div>
+
+      <!-- Submit -->
+      <div class="action-row">
+        <button type="submit" id="submit-btn" class="btn-primary" disabled>Submit</button>
+        <button type="button" class="btn-skip" onclick="skipPair()">Skip &mdash; this pair has extraction or language issues making it unrateable</button>
+      </div>
+    </form>
+
+    <!-- Skip form (hidden, submitted via JS) -->
+    <form id="skip-form" method="post" action="/response" style="display:none;">
+      <input type="hidden" name="pair_id" value="{{ pair_id }}">
+      <input type="hidden" name="side_assignment" value="{{ side_assignment }}">
+      <input type="hidden" name="skipped" value="1">
+      <input type="hidden" name="time_ms" id="skip_time_ms" value="">
+      <input type="hidden" name="readability_choice" value="">
+      <input type="hidden" name="substance_choice" value="">
+    </form>
+
+  </div><!-- end pair-page -->
+
+  <script>
+    var startTime = Date.now();
+    var readabilityChosen = false;
+    var substanceChosen = false;
+
+    function selectChoice(question, value, btn) {
+      // Deselect all in group
+      var group = document.getElementById(question + '-group');
+      var btns = group.querySelectorAll('.rating-btn');
+      btns.forEach(function(b) { b.classList.remove('selected'); });
+
+      // Select this one
+      btn.classList.add('selected');
+
+      // Update hidden field
+      document.getElementById(question + '_choice_hidden').value = value;
+
+      if (question === 'readability') readabilityChosen = true;
+      if (question === 'substance') substanceChosen = true;
+
+      // Enable submit if both answered
+      if (readabilityChosen && substanceChosen) {
+        document.getElementById('submit-btn').disabled = false;
+      }
+    }
+
+    function appendTime() {
+      var elapsed = Date.now() - startTime;
+      document.getElementById('time_ms').value = elapsed;
+    }
+
+    function skipPair() {
+      var elapsed = Date.now() - startTime;
+      document.getElementById('skip_time_ms').value = elapsed;
+      document.getElementById('skip-form').submit();
+    }
+  </script>
+</body>
+</html>
