@@ -1,0 +1,10 @@
+# Generated run artifacts — regenerable, see README "Outputs"
+outputs/*
+!outputs/*.zip
+!outputs/human_vs_llm_comparison.png
+
+# Provider API keys auto-loaded by llm_scorer.py
+.env
+
+# Python
+__pycache__/

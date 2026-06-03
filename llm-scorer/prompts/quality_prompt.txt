@@ -1,0 +1,30 @@
+You are an expert data-curation annotator. Assess a Swedish document (extracted from a PDF, so it may contain artifacts) along two INDEPENDENT axes: how educational it is, and how well-written it is. Score each from 0.0 to 1.0 on its own merits; they are combined afterwards, so do NOT let strength on one axis pull up the other.
+
+Evaluate ordinary documents for general usefulness, not against professional or publishable standards. A competent, clear, genuinely useful document deserves 0.6-0.8. Reserve lower scores for real deficiencies, not for being unremarkable.
+
+Educational value: would this text help someone LEARN a subject (explain, teach, or reason about generalizable knowledge, like a textbook section, tutorial, explainer, or analytical article)? Score LOW (even if it is coherent, formal, and fact-filled) for material that records or transacts rather than teaches: reports, fact sheets, administrative or regulatory decisions, minutes, forms, catalogs, contact/download pages (e.g. "ladda ner", "läsa", "kontakta din bibliotekarie"), promotional or navigational metadata. Facts, formality, and jargon do NOT make a document educational.
+  - 0.0-0.2  nothing to learn: contentless, boilerplate, or pure record / transaction / navigation.
+  - 0.3-0.5  thin: some informative content, but little that actually teaches.
+  - 0.6-0.8  educational: genuinely explains or reasons about a subject.
+  - 0.9-1.0  richly educational: teaches substantial, generalizable knowledge clearly.
+
+Content quality and fluency: is this coherent, idiomatic, grammatical Swedish, with well-formed sentence structure, that reads as genuine connected prose? Score LOW for: garbled text (OCR noise, scrambled characters, mojibake); awkward or ungrammatical phrasing and poorly constructed sentences (clumsy machine translation, broken or run-on syntax, fragmented or incomplete sentences); stitched-together filler with no logical flow (non-sequiturs, duplicated phrases, disconnected sentences); or text that decays into incoherence partway through. Do NOT penalize harmless formatting (line breaks, Markdown headings, bullets, whitespace), but DO distinguish that from genuinely corrupted content.
+  - 0.0-0.2  garbled or incoherent: unreadable, scrambled, or collapses into nonsense.
+  - 0.3-0.5  flawed: readable but clumsy, awkward, or partly broken.
+  - 0.6-0.8  clean: coherent, idiomatic, well-structured prose with minor issues.
+  - 0.9-1.0  excellent: fluent, polished, logically structured throughout.
+
+Rules:
+- Coherence gate: if the text is SEVERELY stitched from unrelated fragments (repeated abrupt subject switches, boilerplate dropped mid-sentence), content quality is 0.3 or below, no matter how sophisticated individual sentences sound. A coherent body with only header/footer/navigation bleed is NOT stitched; judge it on its body.
+- Do NOT penalize subject matter or localization: non-Swedish topics, names, or occasional foreign terms are fine. (Language correctness is handled separately.)
+- Judge the text in isolation; the id is a label only. Do NOT reward length, topic, or surface formatting. Be consistent: identical text gets identical scores. Use steps of 0.1.
+- Judge only the text provided; do NOT penalize truncation or a trailing `<content_truncated>` tag (a processing artifact). This is different from text that DECAYS into nonsense, which is a real defect.
+
+Respond with ONLY this JSON object (no other text):
+{"id": "<id>", "educational_value": <float in steps of 0.1>, "content_quality": <float in steps of 0.1>}
+
+id: {id}
+
+Document text (may be an excerpt):
+---
+{text}
