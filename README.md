@@ -8,7 +8,7 @@ Data quality scoring and reranking for Swedish PDF documents, using Propella ann
 |---|---|
 | `llm-scorer/` | Scores documents with an LLM judge on two axes (educational value, content quality). Produces gold-standard quality labels for training the reranker. |
 | `human_evaluation/` | Pairwise A/B rating tool where human raters compare document quality. Produces human scores used to validate the LLM judge. |
-| `reranker/` | Trains L1 (logistic) and L2 (LightGBM) rerankers using the LLM gold-standard labels and Propella features. |
+| `reranker/` | Trains L1 (linear) and L2 (LightGBM) rerankers using the LLM gold-standard labels and Propella features. |
 
 ## How they relate
 
