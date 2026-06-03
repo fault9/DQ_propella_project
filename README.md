@@ -24,7 +24,7 @@ human_evaluation/        llm-scorer/
 ```
 
 1. **`llm-scorer`** scores ~2000 documents using an LLM that sees raw text only (never Propella labels), producing independent quality labels.
-2. **`human_evaluation`** collects pairwise human ratings on 130 documents, used to validate how well the LLM judge agrees with humans.
+2. **`human_evaluation`** collects pairwise human ratings, used to validate how well the LLM judge agrees with humans.
 3. **`reranker`** uses the LLM labels as training signal and Propella features as input to learn a fast quality ranker.
 
 The LLM scorer also includes a diagnostic (`llm_human_diagnostic.py`) that compares LLM and human scores on the same 130 documents.
