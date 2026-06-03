@@ -1,0 +1,89 @@
+{
+  "best_alpha": 0.0001,
+  "best_gamma": 0.0,
+  "feature_means": {
+    "content_quality": 2.189018617860524,
+    "educational_value": 1.3183969706532028,
+    "information_density": 1.925528557904702,
+    "language_confidence": 0.9870521618143246,
+    "length": 1.1710318712527612,
+    "pii_absence": 0.861786052382455,
+    "safety": 2.994610019023462
+  },
+  "feature_stds": {
+    "content_quality": 1.3980255114900448,
+    "educational_value": 1.2557616527333795,
+    "information_density": 1.1138511457526163,
+    "language_confidence": 0.04364353066678723,
+    "length": 1.1080087138220616,
+    "pii_absence": 0.3451788672906982,
+    "safety": 0.07322997572415527
+  },
+  "features": {
+    "l1_normalization": {
+      "mean": {
+        "content_quality": 2.189018617860524,
+        "educational_value": 1.3183969706532028,
+        "information_density": 1.925528557904702,
+        "language_confidence": 0.9870521618143246,
+        "length": 1.1710318712527612,
+        "pii_absence": 0.861786052382455,
+        "safety": 2.994610019023462
+      },
+      "p1": {
+        "content_quality": 0.0,
+        "educational_value": 0.0,
+        "information_density": 0.0,
+        "language_confidence": 0.8080952167510986,
+        "length": 0.0,
+        "pii_absence": 0.0,
+        "safety": 3.0
+      },
+      "p99": {
+        "content_quality": 4.0,
+        "educational_value": 3.0,
+        "information_density": 3.0,
+        "language_confidence": 1.0000100135803223,
+        "length": 3.0,
+        "pii_absence": 1.0,
+        "safety": 4.0
+      },
+      "std": {
+        "content_quality": 1.3980255114900448,
+        "educational_value": 1.2557616527333795,
+        "information_density": 1.1138511457526163,
+        "language_confidence": 0.04364353066678723,
+        "length": 1.1080087138220616,
+        "pii_absence": 0.3451788672906982,
+        "safety": 0.07322997572415527
+      }
+    }
+  },
+  "join": {
+    "dropped_unmatched_finepdf": 0,
+    "dropped_unmatched_propella": 0,
+    "finepdf_rows": 3172,
+    "matched_rows": 3172,
+    "propella_rows": 3172
+  },
+  "label_distribution": {
+    "count": 3991,
+    "max": 0.8500000000000001,
+    "mean": 0.394622901528439,
+    "min": 0.0,
+    "quartiles": [
+      0.2,
+      0.35,
+      0.55
+    ],
+    "std": 0.20764986978239725
+  },
+  "model_type": "trained_pairwise_linear",
+  "validation": {
+    "recall_at_10pct": 0.2564102564102564,
+    "recall_at_1pct": 0.0,
+    "recall_at_20pct": 0.6282051282051282,
+    "recall_at_30pct": 0.7863247863247863,
+    "recall_at_5pct": 0.05
+  }
+}

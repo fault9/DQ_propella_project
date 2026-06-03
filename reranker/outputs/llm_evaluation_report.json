@@ -1,0 +1,231 @@
+{
+  "external_evals": {
+    "Human train (external)": {
+      "config_path": "configs\\finepdfs_swe_latn_llm.yaml",
+      "generated_at": "2026-05-30T07:37:17.366009+00:00",
+      "gold_mean": 0.5160361538461539,
+      "gold_std": 0.22290992696390455,
+      "labels_path": "traindata\\human_train.csv",
+      "methods": [
+        {
+          "key": "random_shuffle",
+          "label": "Random shuffle",
+          "metrics": {
+            "ndcg_at_10": 0.13529726732101624,
+            "ndcg_at_100": 0.5101574698293005,
+            "ndcg_at_25": 0.2003753959642227,
+            "ndcg_at_50": 0.3402541720955995,
+            "recall_at_10pct": 0.07692307692307693,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.11538461538461539,
+            "recall_at_30pct": 0.20512820512820512,
+            "recall_at_5pct": 0.0,
+            "spearman": 0.0032145734613336246
+          }
+        },
+        {
+          "key": "feature_mean",
+          "label": "Descending mean of L1 input features",
+          "metrics": {
+            "ndcg_at_10": 0.2477427479200896,
+            "ndcg_at_100": 0.6392700302934909,
+            "ndcg_at_25": 0.41015575808401517,
+            "ndcg_at_50": 0.482714560620552,
+            "recall_at_10pct": 0.23076923076923078,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.34615384615384615,
+            "recall_at_30pct": 0.38461538461538464,
+            "recall_at_5pct": 0.14285714285714285,
+            "spearman": 0.2533231370085622
+          }
+        },
+        {
+          "key": "edu_quality_safety_hash",
+          "label": "educational_value \u2192 content_quality \u2192 safety \u2192 doc_hash",
+          "metrics": {
+            "ndcg_at_10": 0.29109922420410256,
+            "ndcg_at_100": 0.6216652040307558,
+            "ndcg_at_25": 0.3975726055531454,
+            "ndcg_at_50": 0.4771879342346772,
+            "recall_at_10pct": 0.15384615384615385,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.2692307692307692,
+            "recall_at_30pct": 0.3333333333333333,
+            "recall_at_5pct": 0.14285714285714285,
+            "spearman": 0.19379480806784197
+          }
+        },
+        {
+          "key": "quality_edu_safety_hash",
+          "label": "content_quality \u2192 educational_value \u2192 safety \u2192 doc_hash",
+          "metrics": {
+            "ndcg_at_10": 0.29109922420410256,
+            "ndcg_at_100": 0.6917728041644453,
+            "ndcg_at_25": 0.43054428569009495,
+            "ndcg_at_50": 0.51252024399729,
+            "recall_at_10pct": 0.15384615384615385,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.34615384615384615,
+            "recall_at_30pct": 0.4358974358974359,
+            "recall_at_5pct": 0.14285714285714285,
+            "spearman": 0.3712108590858813
+          }
+        },
+        {
+          "key": "l1_trained",
+          "label": "Trained L1 (pairwise linear)",
+          "metrics": {
+            "ndcg_at_10": 0.2477427479200896,
+            "ndcg_at_100": 0.6481581438340744,
+            "ndcg_at_25": 0.39746207745598106,
+            "ndcg_at_50": 0.48343832387924884,
+            "recall_at_10pct": 0.23076923076923078,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.34615384615384615,
+            "recall_at_30pct": 0.38461538461538464,
+            "recall_at_5pct": 0.14285714285714285,
+            "spearman": 0.2775539745182919
+          }
+        },
+        {
+          "key": "l2_trained",
+          "label": "Trained L2 (LightGBM LambdaRank)",
+          "metrics": {
+            "ndcg_at_10": 0.1611931804178431,
+            "ndcg_at_100": 0.6466948552385541,
+            "ndcg_at_25": 0.3893483920814916,
+            "ndcg_at_50": 0.4632714276439472,
+            "recall_at_10pct": 0.07692307692307693,
+            "recall_at_1pct": 0.0,
+            "recall_at_20pct": 0.4230769230769231,
+            "recall_at_30pct": 0.5128205128205128,
+            "recall_at_5pct": 0.0,
+            "spearman": 0.3870843518278278
+          }
+        }
+      ],
+      "n_labeled_passed_filter": 130,
+      "n_rows_in_labels_file": 130,
+      "n_test": 130
+    }
+  },
+  "holdout": {
+    "config_path": "configs\\finepdfs_swe_latn_llm.yaml",
+    "generated_at": "2026-05-30T07:37:17.213004+00:00",
+    "gold_mean": 0.3995833333333334,
+    "gold_std": 0.1966485690825698,
+    "labels_path": "traindata\\LLM_train_extended.csv",
+    "methods": [
+      {
+        "key": "random_shuffle",
+        "label": "Random shuffle",
+        "metrics": {
+          "ndcg_at_10": 0.1563030955592971,
+          "ndcg_at_100": 0.32224793816121233,
+          "ndcg_at_25": 0.17309157969296457,
+          "ndcg_at_50": 0.18847437791583335,
+          "recall_at_10pct": 0.06896551724137931,
+          "recall_at_1pct": 0.0,
+          "recall_at_20pct": 0.1206896551724138,
+          "recall_at_30pct": 0.26436781609195403,
+          "recall_at_5pct": 0.0,
+          "spearman": -0.0005761989157212383
+        }
+      },
+      {
+        "key": "feature_mean",
+        "label": "Descending mean of L1 input features",
+        "metrics": {
+          "ndcg_at_10": 0.39107486428858673,
+          "ndcg_at_100": 0.7566733974081666,
+          "ndcg_at_25": 0.5434372903781137,
+          "ndcg_at_50": 0.6300424391164923,
+          "recall_at_10pct": 0.4482758620689655,
+          "recall_at_1pct": 0.0,
+          "recall_at_20pct": 0.5862068965517241,
+          "recall_at_30pct": 0.735632183908046,
+          "recall_at_5pct": 0.26666666666666666,
+          "spearman": 0.8013249058590438
+        }
+      },
+      {
+        "key": "edu_quality_safety_hash",
+        "label": "educational_value \u2192 content_quality \u2192 safety \u2192 doc_hash",
+        "metrics": {
+          "ndcg_at_10": 0.6051446779934677,
+          "ndcg_at_100": 0.8361777018290855,
+          "ndcg_at_25": 0.6474547040582225,
+          "ndcg_at_50": 0.7496240922796472,
+          "recall_at_10pct": 0.4827586206896552,
+          "recall_at_1pct": 0.3333333333333333,
+          "recall_at_20pct": 0.6551724137931034,
+          "recall_at_30pct": 0.7471264367816092,
+          "recall_at_5pct": 0.3333333333333333,
+          "spearman": 0.8109479803399123
+        }
+      },
+      {
+        "key": "quality_edu_safety_hash",
+        "label": "content_quality \u2192 educational_value \u2192 safety \u2192 doc_hash",
+        "metrics": {
+          "ndcg_at_10": 0.6051446779934677,
+          "ndcg_at_100": 0.8237351850781968,
+          "ndcg_at_25": 0.6474547040582225,
+          "ndcg_at_50": 0.7172991743153652,
+          "recall_at_10pct": 0.4827586206896552,
+          "recall_at_1pct": 0.3333333333333333,
+          "recall_at_20pct": 0.5689655172413793,
+          "recall_at_30pct": 0.7241379310344828,
+          "recall_at_5pct": 0.3333333333333333,
+          "spearman": 0.8603569117747532
+        }
+      },
+      {
+        "key": "l1_trained",
+        "label": "Trained L1 (pairwise linear)",
+        "metrics": {
+          "ndcg_at_10": 0.40130442550241163,
+          "ndcg_at_100": 0.7695399452579978,
+          "ndcg_at_25": 0.5460055636652743,
+          "ndcg_at_50": 0.6448721520903913,
+          "recall_at_10pct": 0.4482758620689655,
+          "recall_at_1pct": 0.0,
+          "recall_at_20pct": 0.5689655172413793,
+          "recall_at_30pct": 0.7586206896551724,
+          "recall_at_5pct": 0.26666666666666666,
+          "spearman": 0.8435858561502078
+        }
+      },
+      {
+        "key": "l2_trained",
+        "label": "Trained L2 (LightGBM LambdaRank)",
+        "metrics": {
+          "ndcg_at_10": 0.5577414198454109,
+          "ndcg_at_100": 0.7260172423981625,
+          "ndcg_at_25": 0.5651903058227157,
+          "ndcg_at_50": 0.6040491414614519,
+          "recall_at_10pct": 0.3448275862068966,
+          "recall_at_1pct": 0.0,
+          "recall_at_20pct": 0.46551724137931033,
+          "recall_at_30pct": 0.6091954022988506,
+          "recall_at_5pct": 0.2,
+          "spearman": 0.7756275393945241
+        }
+      }
+    ],
+    "n_labeled_passed_filter": 2758,
+    "n_rows_in_labels_file": 3172,
+    "n_test": 288
+  },
+  "l1_weights": {
+    "content_quality": 0.9788347599266263,
+    "educational_value": 0.8851879265909729,
+    "information_density": 0.9315930810091471,
+    "intercept": 4.323480962854538,
+    "language_confidence": 0.16556067056036577,
+    "length": 0.5275712383641104,
+    "pii_absence": 0.11569786114337316,
+    "safety": 0.0
+  },
+  "training_labels_path": "traindata\\LLM_train_extended.csv"
+}

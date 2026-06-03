@@ -1,0 +1,56 @@
+{
+  "join": {
+    "dropped_unmatched_finepdf": 0,
+    "dropped_unmatched_propella": 0,
+    "finepdf_rows": 1978,
+    "matched_rows": 1978,
+    "propella_rows": 1978
+  },
+  "l1_normalization": {
+    "mean": {
+      "content_quality": 2.510875063227112,
+      "educational_value": 1.5174506828528074,
+      "information_density": 2.3070308548305514,
+      "language_confidence": 0.9931109714640712,
+      "length": 1.2524026302478504,
+      "pii_absence": 0.8254931714719271,
+      "safety": 2.9954361054766734
+    },
+    "p1": {
+      "content_quality": 0.0,
+      "educational_value": 0.0,
+      "information_density": 0.0,
+      "language_confidence": 0.8450039625167847,
+      "length": 0.0,
+      "pii_absence": 0.0,
+      "safety": 3.0
+    },
+    "p99": {
+      "content_quality": 4.0,
+      "educational_value": 3.0,
+      "information_density": 3.0,
+      "language_confidence": 1.0000100135803223,
+      "length": 3.0,
+      "pii_absence": 1.0,
+      "safety": 4.0
+    },
+    "std": {
+      "content_quality": 1.2197796696038403,
+      "educational_value": 1.1714484510219,
+      "information_density": 0.9238824826019991,
+      "language_confidence": 0.030842789149745396,
+      "length": 0.9926478432157356,
+      "pii_absence": 0.379640747609971,
+      "safety": 0.06741936179349624
+    }
+  },
+  "modes": {
+    "l1": "trained_pairwise_linear",
+    "l2": "trained"
+  },
+  "rows": {
+    "passed_hard_filter": 1979,
+    "top_k": 100,
+    "total": 1980
+  }
+}

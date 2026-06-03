@@ -1,0 +1,89 @@
+dataset:
+  propella_dataset: openeurollm/propella-annotations
+  propella_config: swe_Latn
+  propella_source_dataset: finepdfs
+  finepdf_dataset: HuggingFaceFW/finepdfs
+  finepdf_config: swe_Latn
+  split: train
+  limit: 10000
+hard_filter:
+  expected_lid: swe_Latn
+  min_content_quality: null
+  min_information_density: null
+  min_educational_value: null
+  min_safety: null
+  require_pii_absence: null
+  min_length: null
+  min_language_confidence: null
+priority:
+  credits:
+    content_quality: 14.29
+    information_density: 14.29
+    educational_value: 14.28
+    safety: 14.29
+    pii_absence: 14.28
+    length: 14.29
+    language_confidence: 14.280000000000015
+  mu: null
+ranking:
+  k: 100
+  m: 10
+  l2_mode: prototype
+  output_format: parquet
+  output_path: outputs\reranked.parquet
+  include_filtered_rows: true
+prototype:
+  enabled_warning: PROTOTYPE scoring is active. Replace with trained artifacts once
+    gold labels exist.
+  l1_weights:
+    content_quality: 1.25
+    information_density: 1.05
+    educational_value: 1.25
+    safety: 1.15
+    pii_absence: 0.95
+    length: 0.7
+    language_confidence: 0.95
+  l2_extra_weights:
+    inverted_cluster_size: 0.35
+    inverted_duplicate_count: 0.35
+l1_train:
+  alpha_grid:
+  - 0.0001
+  - 0.01
+  - 1.0
+  - 100.0
+  - 10000.0
+  gamma_grid:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 5.0
+  - 10.0
+  learning_rate: 0.05
+  epochs: 250
+  max_pairs: 250000
+  eval_percentiles:
+  - 1
+  - 5
+  - 10
+  - 20
+  - 30
+l2_train:
+  relevance_bins: 8
+  eval_k:
+  - 10
+  - 25
+  - 50
+  - 100
+  group_size: 64
+  groups_per_bucket: 32
+  lightgbm_params:
+    objective: lambdarank
+    metric: ndcg
+    learning_rate: 0.05
+    max_depth: 4
+    min_data_in_leaf: 30
+    num_leaves: 15
+    verbose: -1
+l1_model_path: null
+l2_model_path: null
