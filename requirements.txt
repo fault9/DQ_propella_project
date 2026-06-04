@@ -1,19 +1,24 @@
-# Runtime dependencies for the DQ_propella signal programs.
-# One venv covers the shared sampler + both signal programs.
+# Runtime dependencies for llm-scorer, human_evaluation, and reranker.
 #
 #   python3.12 -m venv .venv
 #   .venv/bin/pip install -r requirements.txt
 
-# Core data handling (sampler, manifests, all programs)
+# Core data handling
 pandas
 numpy
 pyarrow
+polars
 
-# Hugging Face dataset access
-huggingface_hub          # cluster/sampler: parquet shard download + caching
-datasets                 # language confidence: streaming FinePDFs / Propella
+# Hugging Face
+huggingface_hub
+datasets
 
-# Cluster duplicate signals
-faiss-cpu                # exact cosine-similarity range search for duplicates
-sentence-transformers    # dense description embeddings (pulls torch, transformers)
-xxhash                   # fast MinHash LSH hashing
+# LLM APIs (llm-scorer)
+openai
+anthropic
+
+# Human evaluation web app
+fastapi
+uvicorn
+jinja2
+itsdangerous
