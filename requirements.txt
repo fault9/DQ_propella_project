@@ -1,0 +1,19 @@
+# Runtime dependencies for the DQ_propella signal programs.
+# One venv covers the shared sampler + both signal programs.
+#
+#   python3.12 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt
+
+# Core data handling (sampler, manifests, all programs)
+pandas
+numpy
+pyarrow
+
+# Hugging Face dataset access
+huggingface_hub          # cluster/sampler: parquet shard download + caching
+datasets                 # language confidence: streaming FinePDFs / Propella
+
+# Cluster duplicate signals
+faiss-cpu                # exact cosine-similarity range search for duplicates
+sentence-transformers    # dense description embeddings (pulls torch, transformers)
+xxhash                   # fast MinHash LSH hashing
