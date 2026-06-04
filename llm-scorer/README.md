@@ -52,7 +52,6 @@ The prompt is editable and its SHA-256 hash is recorded in `outputs/config.json`
 | `LLM_scoring_finepdf_propella_combined_{lang}.csv` | 24-col file: scores + Propella features + FinePDFs metadata |
 | `extreme_train_top.csv` / `extreme_train_bottom.csv` | Extreme-quality training sets |
 | `human_vs_llm_comparison.png/.txt` | LLM-vs-Human diagnostic |
-| `Scoring+Labels.zip` / `train_extremes.zip` | Packaged deliverables |
 
 ## CLI flags
 
